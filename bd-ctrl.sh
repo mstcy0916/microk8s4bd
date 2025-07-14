@@ -1,17 +1,24 @@
 #!/bin/bash
 # bd-ctrl.sh by MSTCY0916
-# Version: 0.16
-# Date: 2025-07-14
+# Version: 0.18
+# Date: 2025-07-15
 # License: MIT License
 # This script manages the installation, upgrade, uninstallation, and cleanup of Black Duck on MicroK8s using Helm.
 # It checks for prerequisites, manages the Black Duck deployment, and handles the associated Kubernetes resources.
+
+# Variables
+# Note: The variables below are set to default values, you can change them as per your requirements.
+# BD_RN: Black Duck Release Name
 BD_RN="test"
+# BD_NS: Black Duck Namespace
 BD_NS="bd"
+# BD_NodePort: NodePort for Black Duck
 BD_NodePort=30443
+# AL_NodePort: NodePort for Black Duck Alert
 AL_NodePort=31443
 
 function bd_initialize() {
-	# Check if MicroK8s is installed
+	# Check if MicroK8s is 		installed
 	if [ -z "$(which microk8s)" ]; then
 		echo "MicroK8s is not installed. Please install MicroK8s first. Please refer to the official MicroK8s documentation for installation instructions."
 		exit 1
@@ -283,7 +290,7 @@ function bd_integration() {
 	echo "Integration enabled successfully for ${BD_RN} in namespace ${BD_NS}."
 }
 # Enable the Black Duck Alert feature
-function bd_alert() {
+function al_install() {
 	# Check the status of the Black Duck deployment
 	microk8s helm3 status ${BD_RN} --namespace ${BD_NS} &> /dev/null
 	if [ $? != "0" ]; then
@@ -300,18 +307,45 @@ function bd_alert() {
 		echo "Failed to enable alert for ${BD_RN}. Please check the logs."
 		exit 1	
 	fi
-	# Install the Black Duck Alert Helm chart
-	microk8s helm3 install ${BD_RN}-blackduck-alert bds_repo/blackduck-alert --namespace ${BD_NS} \
-		--set enableStandalone=false \
-		--set deployAlertWithBlackduck=true \
-		--set exposedNodePort=${AL_NodePort} \
-		--set blackDuckName=${BD_RN} \
-		--set blackDuckNamespace=${BD_NS}
+	microk8s helm status ${BD_RN}-blackduck-alert --namespace ${BD_NS} &> /dev/null
 	if [ $? != "0" ]; then
-		echo "Failed to install Black Duck Alert. Please check the logs."
-		exit 1
+		# Install the Black Duck Alert Helm chart
+		microk8s helm3 install ${BD_RN}-blackduck-alert bds_repo/blackduck-alert --namespace ${BD_NS} \
+			--set deployAlertWithBlackduck=true \
+			--set exposedNodePort=${AL_NodePort} \
+			--set blackDuckName=${BD_RN} \
+			--set blackDuckNamespace=${BD_NS}
+		if [ $? != "0" ]; then
+			echo "Failed to install Black Duck Alert. Please check the logs."
+			exit 1
+		fi
 	fi
 	echo "Black Duck Alert installed successfully in namespace ${BD_NS}. Access it at http://<your-node-ip>:${AL_NodePort}/alert"
+}
+# Uninstall the Black Duck Alert.
+function al_uninstall() {
+	# Check if the Black Duck Alert release exists
+	microk8s helm3 status ${BD_RN}-blackduck-alert --namespace ${BD_NS} &> /dev/null
+	if [ $? = "0" ]; then
+		# Uninstall the Black Duck Alert Helm chart
+		microk8s helm3 uninstall ${BD_RN}-blackduck-alert --namespace ${BD_NS}
+		if [ $? = "0" ]; then
+			echo "Black Duck Alert uninstalled successfully from namespace ${BD_NS}."
+		else
+			echo "Failed to uninstall Black Duck Alert. Please check the logs."
+		fi
+	fi
+	microk8s helm3 status ${BD_RN} --namespace ${BD_NS} &> /dev/null
+	if [ $? = "0" ]; then
+		# Upgrade the Black Duck Helm chart to disable alert
+		microk8s helm3 upgrade ${BD_RN} bds_repo/blackduck --namespace ${BD_NS} \
+			--set enableAlert=false \
+			--reuse-values
+		if [ $? != "0" ]; then
+			echo "Failed to disable alert for ${BD_RN}. Please check the logs."
+			exit 1
+		fi
+	fi
 }
 # Clean up all resources related to Black Duck
 # This function will uninstall Black Duck, remove the Helm repository, and delete the namespace.
@@ -341,20 +375,20 @@ elif [ "$1" = "uninstall" ]; then
 	bd_uninstall
 elif [ "$1" = "clean" ]; then
 	bd_clean
-elif [ "$1" = "backup" ]; then
-	bd_backup
-elif [ "$1" = "restore" ]; then
-	bd_restore
 elif [ "$1" = "start" ]; then
 	bd_start
 elif [ "$1" = "stop" ]; then
 	bd_stop
+elif [ "$1" = "backup" ]; then
+	bd_backup
+elif [ "$1" = "restore" ]; then
+	bd_restore
 elif [ "$1" = "binary" ]; then
 	bd_binary
-elif [ "$1" = "alert" ]; then
-	bd_alert
 elif [ "$1" = "integration" ]; then
 	bd_integration
+elif [ "$1" = "alert" ]; then
+	al_install
 elif [ "$1" = "status" ]; then
 	bd_status
 elif [ "$1" = "log" ]; then
