@@ -1,6 +1,6 @@
 #!/bin/bash
 # bd-ctrl.sh by MSTCY0916
-# Version: 0.19
+# Version: 0.22
 # Date: 2025-07-15
 # License: MIT License
 # This script manages the installation, upgrade, uninstallation, and cleanup of Black Duck on MicroK8s using Helm.
@@ -424,6 +424,8 @@ elif [ "$1" = "_uninstall_alert" ]; then
 	al_uninstall
 elif [ "$1" = "_backup_alert" ]; then
 	_al_backup
+elif [ "$1" = "_restore_alert" ]; then
+	_al_restore
 elif [ "$1" = "status" ]; then
 	bd_status
 elif [ "$1" = "log" ]; then
