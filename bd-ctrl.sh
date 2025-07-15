@@ -351,12 +351,24 @@ function al_uninstall() {
 		fi
 	fi
 }
-# Clean up all resources related to Black Duck
+# Backup the Black Duck Alert database, now it is not implemented yet.
+function _al_backup() {
+	# This function can be implemented to backup the Black Duck Alert database using pg_dump
+	# This function can be implemented to backup the database using pg_dump
+	microk8s kubectl exec -n ${BD_NS} --stdin --tty $(microk8s kubectl get pods -n ${BD_NS} -o name | grep ${BD_RN}-blackduck-alert-postgres) -- pg_dumpall -U sa > dump.sql
+	if [ $? != "0" ]; then
+		echo "Failed to backup the Black Duck Alert database."
+		exit 1
+	fi
+	echo "Black Duck Alert database backup completed successfully. The database dump is saved as dump.sql"
+	#bd_start
+}
+# Clean up all resources related to Black Duck, now it is not implemented yet.
 # This function will uninstall Black Duck, remove the Helm repository, and delete the namespace.
 # It will also remove the backup files and any other resources created during the installation.
 # Note: This function will not disable the addons or reset MicroK8s.
 # Uncomment the lines below if you want to disable addons and reset MicroK8s.
-function bd_clean() {
+function _bd_clean() {
 	bd_uninstall
 	microk8s helm3 repo remove bds_repo
 	rm -rf bds_repo
@@ -391,8 +403,12 @@ elif [ "$1" = "binary" ]; then
 	bd_binary
 elif [ "$1" = "integration" ]; then
 	bd_integration
-elif [ "$1" = "alert" ]; then
+elif [ "$1" = "_install_alert" ]; then
 	al_install
+elif [ "$1" = "_uninstall_alert" ]; then
+	al_uninstall
+elif [ "$1" = "_backup_alert" ]; then
+	_al_backup
 elif [ "$1" = "status" ]; then
 	bd_status
 elif [ "$1" = "log" ]; then
