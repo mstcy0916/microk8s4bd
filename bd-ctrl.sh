@@ -18,7 +18,7 @@ BD_NodePort=30443
 AL_NodePort=31443
 
 function bd_initialize() {
-	# Check if MicroK8s is 		installed
+	# Check if MicroK8s is installed
 	if [ -z "$(which microk8s)" ]; then
 		echo "MicroK8s is not installed. Please install MicroK8s first. Please refer to the official MicroK8s documentation for installation instructions."
 		exit 1
@@ -354,13 +354,28 @@ function al_uninstall() {
 # Backup the Black Duck Alert database, now it is not implemented yet.
 function _al_backup() {
 	# This function can be implemented to backup the Black Duck Alert database using pg_dump
-	# This function can be implemented to backup the database using pg_dump
 	microk8s kubectl exec -n ${BD_NS} --stdin --tty $(microk8s kubectl get pods -n ${BD_NS} -o name | grep ${BD_RN}-blackduck-alert-postgres) -- pg_dumpall -U sa > dump.sql
 	if [ $? != "0" ]; then
 		echo "Failed to backup the Black Duck Alert database."
 		exit 1
 	fi
 	echo "Black Duck Alert database backup completed successfully. The database dump is saved as dump.sql"
+	#bd_start
+}
+function _al_restore() {
+	# This function can be implemented to restore the Black Duck Alert database using pg_restore
+	echo "Restore the Black Duck Alert database..."
+	if [ ! -f dump.sql ]; then
+		echo "Backup file dump.sql not found."
+		exit 1
+	fi	
+	# Restore the database from the dump file
+	microk8s kubectl exec -i -n ${BD_NS} --stdin $(microk8s kubectl get pods -n ${BD_NS} -o name | grep ${BD_RN}-blackduck-alert-postgres) -- psql -U sa postgres < dump.sql > psql.out 2>&1
+	if [ $? = "0" ]; then
+		echo "Black Duck Alert database restored successfully."
+	else
+		echo "Failed to restore the Black Duck Alert database."
+	fi
 	#bd_start
 }
 # Clean up all resources related to Black Duck, now it is not implemented yet.
