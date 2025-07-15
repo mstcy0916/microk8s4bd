@@ -1,6 +1,6 @@
 #!/bin/bash
 # bd-ctrl.sh by MSTCY0916
-# Version: 0.18
+# Version: 0.19
 # Date: 2025-07-15
 # License: MIT License
 # This script manages the installation, upgrade, uninstallation, and cleanup of Black Duck on MicroK8s using Helm.
@@ -326,13 +326,17 @@ function al_install() {
 function al_uninstall() {
 	# Check if the Black Duck Alert release exists
 	microk8s helm3 status ${BD_RN}-blackduck-alert --namespace ${BD_NS} &> /dev/null
-	if [ $? = "0" ]; then
+	if [ $? != "0" ]; then
+		echo "Black Duck Alert is not installed in namespace ${BD_NS}."
+		exit 1
+	else
 		# Uninstall the Black Duck Alert Helm chart
 		microk8s helm3 uninstall ${BD_RN}-blackduck-alert --namespace ${BD_NS}
-		if [ $? = "0" ]; then
-			echo "Black Duck Alert uninstalled successfully from namespace ${BD_NS}."
-		else
+		if [ $? != "0" ]; then
 			echo "Failed to uninstall Black Duck Alert. Please check the logs."
+			exit 1
+		else
+			echo "Black Duck Alert uninstalled successfully from namespace ${BD_NS}."
 		fi
 	fi
 	microk8s helm3 status ${BD_RN} --namespace ${BD_NS} &> /dev/null
