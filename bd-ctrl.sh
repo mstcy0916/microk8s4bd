@@ -1,6 +1,6 @@
 #!/bin/bash
 # bd-ctrl.sh by MSTCY0916
-# Version: 0.22
+# Version: 0.23
 # Date: 2025-07-15
 # License: MIT License
 # This script manages the installation, upgrade, uninstallation, and cleanup of Black Duck on MicroK8s using Helm.
@@ -32,7 +32,7 @@ function bd_initialize() {
 	# Check if Helm3 addon is enabled
 	microk8s status -a helm3 | grep "enabled" &> /dev/null
 	if [ $? != "0" ]; then
-		echo "Helm3 addin is enabled in MicroK8s. Please enbled it using 'microk8s enable helm3'."
+		echo "Helm3 addin is not enabled in MicroK8s. Please enbled it using 'microk8s enable helm3'."
 		exit 1
 	fi
 	# Check if the dns addon is enabled
@@ -362,6 +362,7 @@ function _al_backup() {
 	echo "Black Duck Alert database backup completed successfully. The database dump is saved as dump.sql"
 	#bd_start
 }
+# Restore the Black Duck Alert database, now it is not implemented yet.
 function _al_restore() {
 	# This function can be implemented to restore the Black Duck Alert database using pg_restore
 	echo "Restore the Black Duck Alert database..."
@@ -418,9 +419,9 @@ elif [ "$1" = "binary" ]; then
 	bd_binary
 elif [ "$1" = "integration" ]; then
 	bd_integration
-elif [ "$1" = "_install_alert" ]; then
+elif [ "$1" = "install_alert" ]; then
 	al_install
-elif [ "$1" = "_uninstall_alert" ]; then
+elif [ "$1" = "uninstall_alert" ]; then
 	al_uninstall
 elif [ "$1" = "_backup_alert" ]; then
 	_al_backup
