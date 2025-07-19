@@ -1,6 +1,9 @@
 
 # **Black Duck products for MicroK8s**
 ブラック・ダック・ソフトウェア製品をMicroK8sで動作させた際の手順をスクリプト化したものです
+正確な情報が必要な場合は公式サイトを参照して下さい
+https://github.com/blackducksoftware/hub/blob/master/kubernetes/blackduck/README.md
+
 
 ## Black Duck (SCA) / bd-ctrl.sh
 ### 使用方法
