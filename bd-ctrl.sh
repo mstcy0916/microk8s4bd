@@ -351,6 +351,8 @@ function al_uninstall() {
 		fi
 	fi
 }
+# Black Duck Alert database backup and restore functions
+# URL: 
 # Backup the Black Duck Alert database, now it is not implemented yet.
 function _al_backup() {
 	# This function can be implemented to backup the Black Duck Alert database using pg_dump
@@ -397,7 +399,8 @@ function _bd_clean() {
 	#sudo microk8s reset
 	#microk8s enable dns
 	#microk8s enable hostpath-storage
-}
+} 
+#
 # Main script execution
 if [ "$1" = "install" ]; then
 	bd_install
